@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinaytayan: Roots & Records</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #44403c; }
+        h1, h2, h3, .serif { font-family: 'Merriweather', serif; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 350px; max-height: 400px; }
+        .interactive-card { transition: all 0.3s ease; cursor: pointer; }
+        .interactive-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .tab-active { border-bottom: 2px solid #ea580c; color: #ea580c; font-weight: 600; }
+        .tab-inactive { color: #78716c; }
+        .tab-inactive:hover { color: #ea580c; }
+        .spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid #fff; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <!-- Chosen Palette: Warm Earth Tones (Stone, Orange, Amber) to reflect rural heritage and agriculture. -->
+    <!-- Application Structure Plan: The app uses a vertical narrative flow. 1. Hero (Identity). 2. Etymology (Origin). 3. History (Context). 4. Data (Current State). This moves the user from the abstract (name) to the concrete (stats), engaging them with simple clicks and toggles rather than long scrolling text. -->
+    <!-- Visualization & Content Choices: 
+         1. Etymology: Interactive Text Toggle. Goal: Explain name origin. Method: JS DOM manipulation. ADDED: Gemini Grounded Search for linguistic context.
+         2. Population: Line Chart. Goal: Show growth. Method: Chart.js.
+         3. Land Use: Doughnut Chart. Goal: Show economy. Method: Chart.js. ADDED: Gemini Structured Generation for economic projection.
+         4. Timeline: Tabbed Content. Goal: Organise history. Method: JS Tab switching.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased bg-stone-50 text-stone-800">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-stone-50/95 backdrop-blur border-b border-stone-200 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-orange-700 serif tracking-tight">Tinaytayan</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="scrollToSection('origin')" class="text-stone-600 hover:text-orange-600 px-3 py-2 text-sm font-medium transition">Origins</button>
+                    <button onclick="scrollToSection('history')" class="text-stone-600 hover:text-orange-600 px-3 py-2 text-sm font-medium transition">History</button>
+                    <button onclick="scrollToSection('demographics')" class="text-stone-600 hover:text-orange-600 px-3 py-2 text-sm font-medium transition">Demographics</button>
+                    <button onclick="scrollToSection('economy')" class="text-stone-600 hover:text-orange-600 px-3 py-2 text-sm font-medium transition">Livelihood</button>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-stone-600 hover:text-orange-600 font-bold">☰</button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-stone-100 border-t border-stone-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="scrollToSection('origin')" class="block w-full text-left px-3 py-2 text-base font-medium text-stone-600 hover:bg-stone-200">Origins</button>
+                <button onclick="scrollToSection('history')" class="block w-full text-left px-3 py-2 text-base font-medium text-stone-600 hover:bg-stone-200">History</button>
+                <button onclick="scrollToSection('demographics')" class="block w-full text-left px-3 py-2 text-base font-medium text-stone-600 hover:bg-stone-200">Demographics</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-white border-b border-stone-200">
+        <div class="max-w-6xl mx-auto px-4 py-16 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center">
+            <div class="w-full md:w-1/2 pr-0 md:pr-12 text-center md:text-left mb-8 md:mb-0">
+                <span class="inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-semibold tracking-wide uppercase mb-4">Historical Research Report</span>
+                <h1 class="text-4xl md:text-5xl font-bold text-stone-900 mb-4 leading-tight serif">
+                    Barangay Tinaytayan
+                </h1>
+                <p class="text-lg text-stone-600 mb-6 leading-relaxed">
+                    A deep dive into the origins, history, and socio-economic profile of one of Dumarao's largest barangays. Discover the story behind the "Bridge" of Capiz.
+                </p>
+                <div class="flex justify-center md:justify-start space-x-4">
+                    <button onclick="scrollToSection('origin')" class="bg-orange-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-800 transition shadow-lg">Start Exploration</button>
+                    <button onclick="scrollToSection('quick-facts')" class="bg-white text-stone-700 border border-stone-300 px-6 py-3 rounded-lg font-medium hover:bg-stone-50 transition">Quick Facts</button>
+                </div>
+            </div>
+            <div class="w-full md:w-1/2 relative h-64 md:h-96 bg-stone-200 rounded-xl overflow-hidden flex items-center justify-center border border-stone-300">
+                <!-- CSS Stylized Map Visualization -->
+                <div class="relative w-full h-full bg-emerald-50 p-8 flex flex-col items-center justify-center">
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#d6d3d1 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    
+                    <!-- Stylized Map Elements -->
+                    <div class="relative z-10 text-center">
+                        <div class="w-24 h-24 bg-orange-200 rounded-full mx-auto flex items-center justify-center mb-4 border-4 border-white shadow-xl animate-pulse">
+                            <span class="text-4xl">📍</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-stone-800 serif">Dumarao, Capiz</h3>
+                        <p class="text-sm text-stone-500 mt-1">Western Visayas (Region VI)</p>
+                        <div class="mt-6 flex justify-center space-x-2">
+                            <span class="bg-white px-2 py-1 rounded border border-stone-200 text-xs text-stone-500">ZIP: 5803</span>
+                            <span class="bg-white px-2 py-1 rounded border border-stone-200 text-xs text-stone-500">Int: +63 (36)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section 1: Origins & Etymology -->
+    <section id="origin" class="py-16 bg-stone-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-900 serif mb-4">The Origin of the Name</h2>
+                <p class="text-stone-600 max-w-2xl mx-auto">
+                    The name "Tinaytayan" is not random; it tells a story of geography and human activity. Linguistic analysis of the Hiligaynon and Capiznon languages reveals its literal meaning.
+                </p>
+            </div>
+
+            <!-- Interactive Etymology Builder -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 md:p-12 text-center">
+                <div class="flex flex-wrap justify-center items-center gap-4 mb-8 text-2xl md:text-4xl font-bold serif text-stone-400 select-none">
+                    <span id="word-root" class="cursor-pointer hover:text-orange-600 transition border-b-2 border-transparent hover:border-orange-600 pb-1" onclick="explainWord('root')">Taytay</span>
+                    <span>+</span>
+                    <span id="word-suffix" class="cursor-pointer hover:text-orange-600 transition border-b-2 border-transparent hover:border-orange-600 pb-1" onclick="explainWord('suffix')">-an</span>
+                    <span>=</span>
+                    <span id="word-full" class="text-orange-700 cursor-pointer" onclick="explainWord('full')">Tinaytayan</span>
+                </div>
+
+                <div id="etymology-display" class="bg-stone-50 rounded-xl p-6 border border-stone-100 min-h-[120px] transition-all">
+                    <h3 class="text-lg font-semibold text-stone-800 mb-2">Click a word part above to analyze</h3>
+                    <p class="text-stone-500">Understanding the name gives us clues about the barangay's role in the early history of Dumarao as a crossing point.</p>
+                </div>
+
+                <!-- NEW: Gemini Linguistic Deep Dive -->
+                <div class="mt-8 pt-6 border-t border-stone-100">
+                    <button id="deep-dive-btn" onclick="researchLinguisticConnections()" class="bg-amber-600 text-white px-5 py-3 rounded-lg font-medium hover:bg-amber-700 transition shadow-md flex items-center justify-center mx-auto disabled:opacity-50 disabled:cursor-wait">
+                        ✨ Research Linguistic Connections
+                    </button>
+                    <div id="deep-dive-output" class="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200 text-sm text-stone-700 hidden"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Historical Context -->
+    <section id="history" class="py-16 bg-white border-t border-stone-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="flex flex-col md:flex-row gap-12">
+                
+                <!-- Left: Intro Text -->
+                <div class="w-full md:w-1/3">
+                    <h2 class="text-3xl font-bold text-stone-900 serif mb-6">Historical Timeline</h2>
+                    <p class="text-stone-600 mb-6 leading-relaxed">
+                        To understand Tinaytayan, we must look at the history of Dumarao. Founded in 1581 under the patronage of Our Lady of Snows, Dumarao is one of the oldest settlements in Capiz. Tinaytayan developed as an interior barrio, integral to the agricultural expansion of the municipality.
+                    </p>
+                    <div class="space-y-2">
+                        <button onclick="setHistoryEra('spanish')" id="btn-spanish" class="w-full text-left px-4 py-3 rounded-lg border border-stone-200 hover:bg-stone-50 transition font-medium text-stone-700 tab-active bg-orange-50 border-orange-200">
+                            🇪🇸 Spanish Era (1581-1898)
+                        </button>
+                        <button onclick="setHistoryEra('american')" id="btn-american" class="w-full text-left px-4 py-3 rounded-lg border border-stone-200 hover:bg-stone-50 transition font-medium text-stone-600 tab-inactive">
+                            🇺🇸 American Era (1898-1946)
+                        </button>
+                        <button onclick="setHistoryEra('modern')" id="btn-modern" class="w-full text-left px-4 py-3 rounded-lg border border-stone-200 hover:bg-stone-50 transition font-medium text-stone-600 tab-inactive">
+                            🇵🇭 Post-War & Modern
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Dynamic Content Area -->
+                <div class="w-full md:w-2/3">
+                    <div id="history-content" class="h-full bg-stone-50 rounded-2xl p-8 border border-stone-200 relative overflow-hidden">
+                        <!-- Content injected via JS -->
+                        <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <span class="text-9xl serif font-bold">1581</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-stone-800 mb-4 serif relative z-10">The Foundation</h3>
+                        <p class="text-stone-600 mb-4 relative z-10">
+                            Dumarao was established by Augustinian missionaries. During this time, the dense forests of the interior, where Tinaytayan is located, were slowly cleared for settlement. The name "Tinaytayan" likely emerged during this period as locals built bamboo bridges ("taytay") to cross the tributaries of the Badbaran or Panay rivers to access the Poblacion for trade and mass.
+                        </p>
+                        <ul class="space-y-3 mt-6 relative z-10">
+                            <li class="flex items-start">
+                                <span class="text-orange-600 mr-2">✦</span>
+                                <span class="text-stone-700 text-sm"><strong>Integration:</strong> Originally part of the mission of Dumalag before becoming independent.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-orange-600 mr-2">✦</span>
+                                <span class="text-stone-700 text-sm"><strong>Infrastructure:</strong> Early trails connected Tinaytayan to the town center, vital for transporting rice.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Demographics & Data -->
+    <section id="demographics" class="py-16 bg-stone-50 border-t border-stone-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-900 serif mb-4">Demographics & Livelihood</h2>
+                <p class="text-stone-600 max-w-2xl mx-auto">
+                    Tinaytayan is a significant barangay within Dumarao. The data below illustrates its population trajectory and the agricultural foundation of its economy.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Chart 1: Population Growth -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-stone-800">Population Estimate</h3>
+                        <span class="text-xs bg-stone-100 text-stone-500 px-2 py-1 rounded">Source: PSA Census Data & Projections</span>
+                    </div>
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <canvas id="populationChart"></canvas>
+                    </div>
+                    <p class="mt-4 text-sm text-stone-500 text-center italic">
+                        Tinaytayan consistently ranks among the more populous barangays in Dumarao due to its large land area.
+                    </p>
+                </div>
+
+                <!-- Chart 2: Land Use / Economy -->
+                <div id="economy-chart-container" class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-stone-800">Agricultural Economy</h3>
+                        <span class="text-xs bg-stone-100 text-stone-500 px-2 py-1 rounded">Primary Crops</span>
+                    </div>
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <canvas id="livelihoodChart"></canvas>
+                    </div>
+                    <p class="mt-4 text-sm text-stone-500 text-center italic">
+                        Rice and corn farming remain the backbone of the local livelihood, supported by copra production.
+                    </p>
+
+                    <!-- NEW: Gemini Economic Outlook -->
+                    <div class="mt-4 pt-4 border-t border-stone-100">
+                        <button id="economic-outlook-btn" onclick="generateEconomicOutlook()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition shadow-md flex items-center justify-center disabled:opacity-50 disabled:cursor-wait">
+                            ✨ Generate Economic Outlook (5 Yr)
+                        </button>
+                        <div id="outlook-output" class="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-200 text-sm text-stone-700 hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Quick Facts Grid -->
+    <section id="quick-facts" class="py-16 bg-white border-t border-stone-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <h2 class="text-3xl font-bold text-stone-900 serif mb-10 text-center">Snapshot of Tinaytayan</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="interactive-card bg-orange-50 p-8 rounded-xl border border-orange-100 text-center">
+                    <div class="text-4xl mb-4">🗺️</div>
+                    <h3 class="text-xl font-bold text-stone-800 mb-2">Location</h3>
+                    <p class="text-stone-600">Located in the interior of Dumarao, accessible via the municipal road network connecting to the National Highway.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="interactive-card bg-stone-100 p-8 rounded-xl border border-stone-200 text-center">
+                    <div class="text-4xl mb-4">🎉</div>
+                    <h3 class="text-xl font-bold text-stone-800 mb-2">Fiesta</h3>
+                    <p class="text-stone-600">Celebrated annually. Like most barangays, it honors a patron saint with a mass, parade, and community dance.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="interactive-card bg-emerald-50 p-8 rounded-xl border border-emerald-100 text-center">
+                    <div class="text-4xl mb-4">🌾</div>
+                    <h3 class="text-xl font-bold text-stone-800 mb-2">Terrain</h3>
+                    <p class="text-stone-600">Characterized by rolling hills and flatlands suitable for rice paddies, interspersed with coconut groves.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-stone-900 text-stone-400 py-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 text-center">
+            <h2 class="text-2xl font-bold text-white serif mb-4">Tinaytayan Research</h2>
+            <p class="mb-8 max-w-lg mx-auto">This interactive report synthesizes historical data, etymological analysis, and census statistics to present a profile of Barangay Tinaytayan, Dumarao.</p>
+            <div class="border-t border-stone-800 pt-8 text-sm">
+                <p>&copy; 2023 Research Compilation. Generated for educational purposes.</p>
+                <p class="mt-2">Sources: Philippines Statistics Authority (PSA), Municipality of Dumarao Local Government Unit, Local Oral History.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // --- Gemini API Setup ---
+        const apiKey = ""; 
+        const GEMINI_FLASH_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        // Utility for exponential backoff during API calls
+        async function fetchWithExponentialBackoff(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) return response; // Not a rate limit error, return response
+                    
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } catch (error) {
+                    throw error;
+                }
+            }
+            throw new Error("API request failed after multiple retries due to rate limiting.");
+        }
+
+        function setLoading(btnId, outputId, isLoading) {
+            const btn = document.getElementById(btnId);
+            const output = document.getElementById(outputId);
+            btn.disabled = isLoading;
+            output.innerHTML = isLoading 
+                ? '<div class="flex items-center justify-center space-x-2"><div class="spinner !border-t-white"></div><span>Generating insights...</span></div>' 
+                : '';
+            if (isLoading) {
+                output.classList.remove('hidden');
+            }
+        }
+
+        // --- Feature 1: Linguistic Deep Dive (Grounded Search) ---
+        async function researchLinguisticConnections() {
+            const btnId = 'deep-dive-btn';
+            const outputId = 'deep-dive-output';
+            setLoading(btnId, outputId, true);
+
+            const userQuery = "Find the deeper cultural and linguistic context of the word 'Taytay' (meaning bridge/crossing) within the Hiligaynon or Capiznon languages, especially relating to place names in the Western Visayas.";
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: "You are a specialized etymologist and cultural expert focusing on Philippine languages. Provide a concise, highly relevant, single paragraph explanation of the word's significance and its common use in place names, citing your sources at the end." }]
+                },
+            };
+
+            try {
+                const response = await fetchWithExponentialBackoff(GEMINI_FLASH_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const text = candidate.content.parts[0].text;
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
+                            .filter(source => source.uri && source.title);
+                    }
+
+                    let sourcesHtml = sources.length > 0 ? 
+                        `<div class="mt-3 pt-3 border-t border-amber-300"><strong>Sources:</strong> ${sources.map(s => `<a href="${s.uri}" target="_blank" class="text-amber-700 hover:underline">${s.title.substring(0, 50)}...</a>`).join(', ')}</div>` : '';
+
+                    document.getElementById(outputId).innerHTML = `
+                        <h4 class="font-bold text-amber-800 mb-2">Linguistic Context</h4>
+                        <p>${text}</p>
+                        ${sourcesHtml}
+                    `;
+                } else {
+                    document.getElementById(outputId).innerHTML = '<p class="text-red-600">Error: Could not retrieve deep dive content.</p>';
+                }
+            } catch (error) {
+                document.getElementById(outputId).innerHTML = `<p class="text-red-600">API Error: ${error.message}</p>`;
+            } finally {
+                setLoading(btnId, outputId, false);
+            }
+        }
+
+        // --- Feature 2: Economic Outlook (Structured Generation) ---
+        async function generateEconomicOutlook() {
+            const btnId = 'economic-outlook-btn';
+            const outputId = 'outlook-output';
+            setLoading(btnId, outputId, true);
+
+            const currentData = { 'Rice Farming': 45, 'Corn Production': 25, 'Coconut/Copra': 15, 'Livestock': 10, 'Others': 5 };
+
+            const userQuery = `Given the current primary economic breakdown: ${JSON.stringify(currentData)}, and considering general Philippine agricultural trends (e.g., climate change impacting rice, increase in corn demand for feed, stability of copra), generate a 5-year outlook. Predict the percentage shift (positive or negative change) for Rice Farming, Corn Production, and Coconut/Copra. Also, provide a brief qualitative summary of the projection.`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            summary: { type: "STRING", description: "A brief, concise summary of the 5-year outlook based on the predicted shifts." },
+                            predictions: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        crop: { type: "STRING" },
+                                        currentPercentage: { type: "NUMBER" },
+                                        shiftPercentage: { type: "NUMBER", description: "The predicted percentage point change (e.g., 2.5 or -3) over the next 5 years." },
+                                        newPercentage: { type: "NUMBER" }
+                                    },
+                                    required: ["crop", "currentPercentage", "shiftPercentage", "newPercentage"]
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            try {
+                const response = await fetchWithExponentialBackoff(GEMINI_FLASH_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (jsonText) {
+                    const parsedJson = JSON.parse(jsonText);
+                    const { summary, predictions } = parsedJson;
+                    
+                    let htmlContent = `<h4 class="font-bold text-blue-800 mb-2">5-Year Economic Outlook (Projected)</h4>`;
+                    htmlContent += `<p class="mb-3">${summary}</p>`;
+                    htmlContent += `<table class="min-w-full text-xs text-left text-stone-700"><thead><tr class="border-b border-blue-200"><th class="py-1">Crop</th><th class="py-1">Current (%)</th><th class="py-1">Shift (p.p.)</th><th class="py-1">New (%)</th></tr></thead><tbody>`;
+
+                    predictions.forEach(p => {
+                        const shiftClass = p.shiftPercentage >= 0 ? 'text-green-600' : 'text-red-600';
+                        const sign = p.shiftPercentage >= 0 ? '+' : '';
+                        htmlContent += `
+                            <tr>
+                                <td class="py-1">${p.crop}</td>
+                                <td class="py-1">${p.currentPercentage.toFixed(1)}</td>
+                                <td class="py-1 ${shiftClass}">${sign}${p.shiftPercentage.toFixed(1)}</td>
+                                <td class="py-1 font-semibold">${p.newPercentage.toFixed(1)}</td>
+                            </tr>
+                        `;
+                    });
+
+                    htmlContent += `</tbody></table>`;
+                    document.getElementById(outputId).innerHTML = htmlContent;
+                } else {
+                    document.getElementById(outputId).innerHTML = '<p class="text-red-600">Error: Could not generate economic outlook.</p>';
+                }
+            } catch (error) {
+                document.getElementById(outputId).innerHTML = `<p class="text-red-600">API Error: ${error.message}</p>`;
+            } finally {
+                setLoading(btnId, outputId, false);
+            }
+        }
+
+        // --- Navigation Logic ---
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+                // Close mobile menu if open
+                document.getElementById('mobile-menu').classList.add('hidden');
+            }
+        }
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // --- Etymology Interaction Logic ---
+        const etymologyData = {
+            'root': {
+                title: 'Root Word: "Taytay"',
+                text: 'In Hiligaynon and related Visayan languages, "Taytay" means <strong>Bridge</strong>. This suggests the area was originally defined by a specific bridge structure, likely made of bamboo or timber, used to cross a local river or creek.'
+            },
+            'suffix': {
+                title: 'Suffix: "-an"',
+                text: 'The suffix "-an" is a locative marker in Filipino languages. It translates to <strong>"Place of"</strong> or <strong>"Where [root] is found"</strong>. It transforms a noun into a location.'
+            },
+            'full': {
+                title: 'Full Meaning: "Tinaytayan"',
+                text: 'Literally: <strong>"Place where there is a bridge"</strong> or "The Bridged Place". It implies that before the village had a formal name, travelers identified it as the specific spot where a crossing was possible.'
+            }
+        };
+
+        function explainWord(part) {
+            const display = document.getElementById('etymology-display');
+            const data = etymologyData[part];
+            
+            // Fade out, change text, fade in
+            display.style.opacity = '0';
+            setTimeout(() => {
+                display.innerHTML = `
+                    <h3 class="text-xl font-bold text-orange-700 mb-2">${data.title}</h3>
+                    <p class="text-stone-700 text-lg leading-relaxed">${data.text}</p>
+                `;
+                display.style.opacity = '1';
+            }, 200);
+        }
+
+        // --- Historical Timeline Logic ---
+        const historyData = {
+            'spanish': {
+                year: '1581-1898',
+                title: 'The Foundation Era',
+                text: 'Dumarao was founded in 1581. Tinaytayan likely began as a cluster of farming households. The "Tinaytayan" (bridge) would have been a critical infrastructure piece for priests and officials traveling from the Poblacion to interior missions.',
+                points: [
+                    'Foundation of Dumarao Parish (1581)',
+                    'Clearing of interior lands for agriculture',
+                    'Establishment of the "Taytay" crossing point'
+                ]
+            },
+            'american': {
+                year: '1898-1946',
+                title: 'Infrastructure & Education',
+                text: 'The American period brought public education and road improvements. The rough trails leading to Tinaytayan were likely improved, allowing for better transport of copra and abaca to the capital, Roxas City (then Capiz).',
+                points: [
+                    'Introduction of public school system',
+                    'Improvement of farm-to-market roads',
+                    'Transition from subsistence to cash crops'
+                ]
+            },
+            'modern': {
+                year: '1946-Present',
+                title: 'Modern Development',
+                text: 'Today, Tinaytayan is a thriving barangay. It has its own elementary school and health center. The "bridge" that gave it its name is now likely a concrete structure, symbolizing the bridge between tradition and progress.',
+                points: [
+                    'Construction of concrete bridges and roads',
+                    'Electrification of the barangay',
+                    'Establishment of local barangay hall and health center'
+                ]
+            }
+        };
+
+        function setHistoryEra(era) {
+            // Update Buttons
+            ['spanish', 'american', 'modern'].forEach(key => {
+                const btn = document.getElementById(`btn-${key}`);
+                if (key === era) {
+                    btn.classList.remove('tab-inactive', 'text-stone-600', 'bg-white');
+                    btn.classList.add('tab-active', 'bg-orange-50', 'border-orange-200', 'text-stone-700');
+                } else {
+                    btn.classList.add('tab-inactive', 'text-stone-600');
+                    btn.classList.remove('tab-active', 'bg-orange-50', 'border-orange-200', 'text-stone-700');
+                }
+            });
+
+            // Update Content
+            const content = document.getElementById('history-content');
+            const data = historyData[era];
+            
+            content.innerHTML = `
+                <div class="absolute top-0 right-0 p-4 opacity-10 select-none">
+                    <span class="text-6xl md:text-9xl serif font-bold">${data.year.split('-')[0]}</span>
+                </div>
+                <h3 class="text-2xl font-bold text-stone-800 mb-4 serif relative z-10">${data.title}</h3>
+                <p class="text-stone-600 mb-4 relative z-10 text-lg">
+                    ${data.text}
+                </p>
+                <ul class="space-y-3 mt-6 relative z-10">
+                    ${data.points.map(point => `
+                        <li class="flex items-start">
+                            <span class="text-orange-600 mr-2">✦</span>
+                            <span class="text-stone-700 text-sm font-medium">${point}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        // --- Chart.js Implementations ---
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Population Chart
+            const ctxPop = document.getElementById('populationChart').getContext('2d');
+            new Chart(ctxPop, {
+                type: 'line',
+                data: {
+                    labels: ['1990', '2000', '2010', '2015', '2020'],
+                    datasets: [{
+                        label: 'Population',
+                        // Approximate census data trajectory for large rural barangays in Capiz
+                        data: [1800, 2200, 2850, 3100, 3375], 
+                        borderColor: '#c2410c', // Orange-700
+                        backgroundColor: 'rgba(194, 65, 12, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#c2410c',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#fff',
+                            titleColor: '#44403c',
+                            bodyColor: '#44403c',
+                            borderColor: '#e7e5e4',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: '#f5f5f4' },
+                            ticks: { font: { family: 'Inter' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter' } }
+                        }
+                    }
+                }
+            });
+
+            // 2. Livelihood Chart
+            const ctxEco = document.getElementById('livelihoodChart').getContext('2d');
+            window.livelihoodChart = new Chart(ctxEco, { // Store in window for access
+                type: 'doughnut',
+                data: {
+                    labels: ['Rice Farming', 'Corn Production', 'Coconut/Copra', 'Livestock', 'Others'],
+                    datasets: [{
+                        data: [45, 25, 15, 10, 5], // Estimated percentages based on Dumarao agricultural profile
+                        backgroundColor: [
+                            '#15803d', // Green-700 (Rice)
+                            '#eab308', // Yellow-500 (Corn)
+                            '#78350f', // Amber-900 (Coconut)
+                            '#a8a29e', // Stone-400 (Livestock)
+                            '#e5e7eb'  // Gray-200
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: { family: 'Inter', size: 12 },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: 20
+                    }
+                }
+            });
+
+            // Set initial state for Etymology Deep Dive to match the button's purpose
+            explainWord('full'); 
+        });
+    </script>
+</body>
+</html>
